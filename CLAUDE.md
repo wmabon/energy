@@ -67,12 +67,13 @@ Full product spec: `energy-log-prd-v2.md`
 | Framework | Next.js 15 (App Router, React Server Components) |
 | Language | TypeScript (strict mode) |
 | Styling | Tailwind CSS 4 |
-| Database | Neon Postgres |
-| ORM | Drizzle ORM |
-| Auth | NextAuth.js v5 (magic link) |
+| Database | LibSQL (SQLite) locally, Neon Postgres for production |
+| ORM | Drizzle ORM (`drizzle-orm/libsql` driver) |
+| Auth | NextAuth.js v5 (dev: credentials, prod: magic link) |
+| Font | Geist Sans (via `geist` npm package) |
 | Deployment | Vercel |
-| Offline | Service worker + IndexedDB local queue |
-| Testing | Vitest (unit/component), Playwright (e2e) |
+| Offline | Service worker + IndexedDB local queue (not yet implemented) |
+| Testing | Vitest (unit/component), Playwright (e2e) (not yet installed) |
 | Package manager | pnpm |
 
 ## Architecture Conventions
@@ -88,28 +89,45 @@ Full product spec: `energy-log-prd-v2.md`
 ```
 src/
   app/
-    (auth)/            # login, magic-link callback
-    (app)/             # authenticated app shell
-      today/
-      log/             # charge/drain composer
-      shift/           # shift-now flow
-      patterns/
-      practices/
-      settings/
+    (auth)/
+      login/           # credentials login (dev), magic-link (prod)
+    (app)/             # authenticated app shell (bottom nav + settings gear)
+      today/           # daily dashboard with cycle progress
+      log/             # charge/drain composer (progressive depth)
+      shift/           # shift-now guided flow
+      patterns/        # rule-based pattern summaries
+      practices/       # 3 commitments per cycle
+      settings/        # theme, export, delete, sign out
+      timeline/        # chronological entry list
+    api/auth/          # NextAuth route handler
     layout.tsx
     globals.css
   components/
-    ui/                # generic UI primitives (Button, Card, Chip, etc.)
-    [feature]/         # feature-specific components
+    ui/                # Button, Card, Chip, Input, Textarea
+    nav/               # bottom-nav
+    today/             # today-actions, today-entries, cycle-progress, active-practices
+    log/               # log-composer
+    shift/             # shift-flow
+    patterns/          # patterns-summary
+    practices/         # practices-manager
+    settings/          # settings-panel
+    timeline/          # timeline-view
+    theme-provider.tsx # light/dark/system theme context
   lib/
     db/
-      schema.ts        # Drizzle schema definitions
-      index.ts         # db client
-      migrations/
-    auth/
-    utils/
-  actions/             # server actions
-  types/               # shared TypeScript types
+      schema.ts        # Drizzle schema (sqliteTable)
+      index.ts         # libsql client + auto table init
+    auth.ts            # NextAuth config
+    utils.ts           # cn(), formatDate/Time, getGreeting, etc.
+  actions/
+    entries.ts         # CRUD for charge/drain entries
+    shifts.ts          # CRUD for shift records
+    cycles.ts          # cycle management (get or create)
+    practices.ts       # practice CRUD + daily logging
+    export.ts          # JSON export + delete-all
+  types/
+    index.ts           # Entry, Shift, Practice, Cycle, ActionResult
+    next-auth.d.ts     # session type augmentation
 ```
 
 ## Coding Standards
@@ -125,11 +143,13 @@ src/
 ## Database Conventions
 
 - Schema defined in Drizzle at `src/lib/db/schema.ts` as single source of truth.
+- Uses `sqliteTable` from `drizzle-orm/sqlite-core` (libsql driver).
 - Table names: plural, snake_case (`entries`, `cycles`, `practices`).
-- All tables include `id` (uuid), `created_at`, `updated_at`.
+- All tables include `id` (text/uuid), `created_at`, `updated_at`.
 - Foreign keys reference `users.id`.
-- Soft delete via `deleted_at` timestamp.
-- Migrations managed via `drizzle-kit`.
+- Soft delete via `deleted_at` timestamp on entries and shifts.
+- Tables auto-created via inline SQL in `src/lib/db/index.ts` (migration system TBD).
+- To switch to Neon Postgres for production: change driver to `drizzle-orm/neon-http`, update schema to use `pgTable`, and set `DATABASE_URL` env var.
 
 ## Testing Strategy
 
@@ -145,15 +165,21 @@ src/
 pnpm install          # install dependencies
 pnpm dev              # local dev server (http://localhost:3000)
 pnpm build            # production build
-pnpm test             # run vitest
-pnpm test:e2e         # run playwright
-pnpm db:push          # push schema to database
-pnpm db:migrate       # run migrations
+pnpm lint             # run eslint
+pnpm db:push          # push schema to database via drizzle-kit
 pnpm db:studio        # open drizzle studio
 ```
 
+**Not yet configured** (install deps first):
+```bash
+pnpm test             # run vitest (needs: pnpm add -D vitest)
+pnpm test:e2e         # run playwright (needs: pnpm add -D @playwright/test)
+```
+
 Required env vars (`.env.local`):
-- `DATABASE_URL` — Neon Postgres connection string
-- `NEXTAUTH_SECRET` — session signing key
+- `DATABASE_URL` — libsql connection string (defaults to `file:energy.db` for local dev)
+- `NEXTAUTH_SECRET` — session signing key (defaults to `dev-secret-change-in-production`)
 - `NEXTAUTH_URL` — `http://localhost:3000` in dev
-- `EMAIL_SERVER` — SMTP connection string for magic links
+
+**Not yet needed** (for production):
+- `EMAIL_SERVER` — SMTP connection string for magic link auth
