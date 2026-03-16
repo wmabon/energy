@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-charge: var(--charge);
+  --color-charge-foreground: var(--charge-foreground);
+  --color-drain: var(--drain);
+  --color-drain-foreground: var(--drain-foreground);
+  --color-shift: var(--shift);
+  --color-shift-foreground: var(--shift-foreground);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --background: #FAFAF8;
+  --foreground: #1C1917;
+  --card: #F5F5F0;
+  --card-foreground: #1C1917;
+  --primary: #78716C;
+  --primary-foreground: #FAFAF8;
+  --secondary: #F5F5F0;
+  --secondary-foreground: #44403C;
+  --muted: #E7E5E4;
+  --muted-foreground: #78716C;
+  --accent: #F5F5F0;
+  --accent-foreground: #1C1917;
+  --destructive: #DC2626;
+  --destructive-foreground: #FAFAF8;
+  --border: #E7E5E4;
+  --input: #E7E5E4;
+  --ring: #A8A29E;
+  --radius: 0.75rem;
+  --charge: #D97706;
+  --charge-foreground: #FFFBEB;
+  --drain: #BE185D;
+  --drain-foreground: #FDF2F8;
+  --shift: #0D9488;
+  --shift-foreground: #F0FDFA;
+}
+
+.dark {
+  --background: #1C1917;
+  --foreground: #FAFAF5;
+  --card: #292524;
+  --card-foreground: #FAFAF5;
+  --primary: #A8A29E;
+  --primary-foreground: #1C1917;
+  --secondary: #292524;
+  --secondary-foreground: #D6D3D1;
+  --muted: #44403C;
+  --muted-foreground: #A8A29E;
+  --accent: #292524;
+  --accent-foreground: #FAFAF5;
+  --destructive: #EF4444;
+  --destructive-foreground: #FAFAF5;
+  --border: #44403C;
+  --input: #44403C;
+  --ring: #78716C;
+  --charge: #F59E0B;
+  --charge-foreground: #451A03;
+  --drain: #EC4899;
+  --drain-foreground: #500724;
+  --shift: #2DD4BF;
+  --shift-foreground: #042F2E;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Safe area padding for iPhone */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  }
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Remove transition from animations */
+[data-animating] * {
+  transition: none !important;
+}
